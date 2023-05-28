@@ -1,0 +1,16 @@
+syntax = "proto3";
+package state;
+
+option go_package = "mafia/pkg/proto/game";
+
+enum State {
+  UNKNOWN = 0;
+  DAY    = 1;
+  NIGHT  = 2;
+  END    = 3;
+  SPIRIT = 4;
+}
+
+message StateResponse {
+  state.State state = 1;
+}

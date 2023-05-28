@@ -1,0 +1,41 @@
+syntax = "proto3";
+package actions;
+
+option go_package = "mafia/pkg/proto/game";
+
+message VoteBanRequest {
+  string user_id = 1;
+  string target = 2;
+}
+
+message VoteBanResponse {
+}
+
+message ChatRequest {
+  string user_id = 1;
+  string text = 2;
+}
+
+message EndRequest {
+  string user_id = 1;
+}
+
+message EndResponse {
+}
+
+message CommitRequest {
+  string user_id = 1;
+  string target = 2;
+}
+
+message CommitResponse {
+  enum Result {
+    OK = 0;
+    FAIL = 1;
+  }
+  Result result = 1;
+}
+
+message KillResponse {
+  string user_id = 1;
+}

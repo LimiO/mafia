@@ -1,0 +1,59 @@
+syntax = "proto3";
+package connection;
+
+import "game/actions.proto";
+import "game/state.proto";
+import "game/roles.proto";
+
+option go_package = "mafia.connection";
+
+message UserJoinRequest {
+  string user_id = 1;
+}
+
+message UserJoinResponse {
+  enum Type {
+    OK = 0;
+    EXISTS = 1;
+    DEFINED = 2;
+    STARTED = 3;
+  };
+  Type type = 1;
+}
+
+message ChatResponse {
+  string user_id = 1;
+  string text = 2;
+}
+
+message ListParticipantsRequest {
+}
+
+message ListParticipantsResponse {
+  repeated string users = 1;
+}
+
+message StartGameResponse {
+  repeated string users = 1;
+  roles.Role role = 2;
+}
+
+message ServerResponse {
+    oneof response {
+      UserJoinResponse join = 1;
+      ChatResponse chat = 2;
+      state.StateResponse state = 3;
+      StartGameResponse start = 4;
+      actions.KillResponse kill = 5;
+    }
+}
+
+service MafiaServer {
+  rpc connect (UserJoinRequest) returns (stream ServerResponse);
+  rpc listParticipants (ListParticipantsRequest) returns (ListParticipantsResponse);
+
+  rpc voteBan (actions.VoteBanRequest) returns (actions.VoteBanResponse);
+  rpc chat (actions.ChatRequest) returns (ChatResponse);
+  rpc end (actions.EndRequest) returns (actions.EndResponse);
+  rpc commit (actions.CommitRequest) returns (actions.CommitResponse);
+}

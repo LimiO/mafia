@@ -1,0 +1,14 @@
+syntax = "proto3";
+package roles;
+
+option go_package = "mafia/pkg/proto/game";
+
+enum Role {
+  HUMAN = 0;
+  MAFIA = 1;
+  POLICE = 2;
+}
+
+message RoleResponse {
+  Role role = 1;
+}
