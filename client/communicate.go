@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	pgame "mafia/pkg/proto/game"
-	"strings"
 	"time"
 
 	connection "mafia/pkg/proto/connection"
@@ -61,21 +60,5 @@ func (c *Client) ProcessJoinResponse(rsp *connection.UserJoinResponse) error {
 
 func (c *Client) ProcessChatResponse(rsp *connection.ChatResponse) error {
 	log.Printf("user %q: %s", rsp.GetUserId(), rsp.GetText())
-	return nil
-}
-
-// other
-
-func (c *Client) ListParticipants() error {
-	req := &connection.ListParticipantsRequest{}
-	rsp, err := c.GrpcClient.ListParticipants(context.Background(), req)
-	if err != nil {
-		return fmt.Errorf("failed to send 'listParticipands' request: %v", err)
-	}
-	return c.ProcessListParticipants(rsp)
-}
-
-func (c *Client) ProcessListParticipants(rsp *connection.ListParticipantsResponse) error {
-	log.Printf("list participants: %s", strings.Join(rsp.Users, ", "))
 	return nil
 }

@@ -11,10 +11,10 @@ func ShuffleRoles(users []string) map[string]game.Role {
 		users[i], users[j] = users[j], users[i]
 	}
 	result := map[string]game.Role{
-		//users[0]: game.Role_HUMAN,
-		//users[1]: game.Role_HUMAN,
-		users[0]: game.Role_MAFIA,
-		users[1]: game.Role_POLICE,
+		users[0]: game.Role_HUMAN,
+		users[1]: game.Role_HUMAN,
+		users[2]: game.Role_MAFIA,
+		users[3]: game.Role_POLICE,
 	}
 	return result
 }

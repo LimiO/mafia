@@ -10,10 +10,11 @@ import (
 )
 
 func (c *Controller) ProcessNight(client connection.MafiaServerClient) {
-	if c.Role == pgame.Role_HUMAN {
+	if !c.Role.NeedProcess() {
 		c.State = pgame.State_SPIRIT
 		return
 	}
+
 	ids := c.MakeAliveParticipantIds()
 	selected, err := cli.AskSelect("Select target to do", ids)
 	if err != nil {
@@ -21,11 +22,18 @@ func (c *Controller) ProcessNight(client connection.MafiaServerClient) {
 		return
 	}
 	c.State = pgame.State_SPIRIT
-	_, err = client.Commit(context.Background(), &pgame.CommitRequest{UserId: c.ID, Target: selected})
+
+	rsp, err := client.Commit(context.Background(), &pgame.CommitRequest{
+		UserId: c.ID,
+		Target: selected,
+		Game:   c.GameID,
+	})
 	if err != nil {
 		log.Printf("failed to commit: %v", err)
 		return
 	}
-	// TODO обработать ответ от сервера для коммисара. Сохранять его куда-то?
-	// Надо добавить для комиссара опцию, чтобы он мог объявлять кто мафия, а кто нет.
+	if rsp.Result == pgame.CommitResponse_FAIL {
+		return
+	}
+	c.Role.SetInfo(selected)
 }

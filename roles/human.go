@@ -4,6 +4,6 @@ type Human struct {
 	BaseRole
 }
 
-func (h *Human) Commit(target *BaseRole) {
-	h.VoteBan(target)
+func (h *Human) NeedProcess() bool {
+	return false
 }

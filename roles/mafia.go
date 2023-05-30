@@ -4,7 +4,6 @@ type Mafia struct {
 	BaseRole
 }
 
-func (m *Mafia) Commit(target *BaseRole) error {
-	target.Die()
-	return nil
+func (m *Mafia) NeedProcess() bool {
+	return true
 }

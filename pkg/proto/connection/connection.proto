@@ -27,6 +27,7 @@ message ChatResponse {
 }
 
 message ListParticipantsRequest {
+  uint32 game = 1;
 }
 
 message ListParticipantsResponse {
@@ -36,6 +37,7 @@ message ListParticipantsResponse {
 message StartGameResponse {
   repeated string users = 1;
   roles.Role role = 2;
+  uint32 game = 3;
 }
 
 message ServerResponse {
@@ -56,4 +58,5 @@ service MafiaServer {
   rpc chat (actions.ChatRequest) returns (ChatResponse);
   rpc end (actions.EndRequest) returns (actions.EndResponse);
   rpc commit (actions.CommitRequest) returns (actions.CommitResponse);
+  rpc publish (actions.PublishRequest) returns (actions.PublishResponse);
 }

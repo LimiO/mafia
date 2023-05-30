@@ -2,23 +2,13 @@ package server
 
 import (
 	"log"
-	pgame "mafia/pkg/proto/game"
 
 	connection "mafia/pkg/proto/connection"
+	pgame "mafia/pkg/proto/game"
 )
 
-type Filter func(userID string) bool
-
-func (s *Server) AliveFilter(userID string) bool {
-	user, ok := s.users[userID]
-	if !ok {
-		return true
-	}
-	return !user.alive
-}
-
-func (s *Server) SendResponse(rsp *connection.ServerResponse, from string, filters ...Filter) {
-	for userId, user := range s.users {
+func (g *Game) SendResponse(rsp *connection.ServerResponse, from string, filters ...Filter) {
+	for userId, user := range g.users {
 		if from == userId {
 			continue
 		}
@@ -39,8 +29,8 @@ func (s *Server) SendResponse(rsp *connection.ServerResponse, from string, filte
 	}
 }
 
-func (s *Server) SendTo(userID, text string) {
-	user, ok := s.users[userID]
+func (g *Game) SendTo(userID, text string) {
+	user, ok := g.users[userID]
 	if !ok {
 		return
 	}
@@ -54,8 +44,8 @@ func (s *Server) SendTo(userID, text string) {
 	})
 }
 
-func (s *Server) SendStateTo(userID string, state pgame.State) {
-	user, ok := s.users[userID]
+func (g *Game) SendStateTo(userID string, state pgame.State) {
+	user, ok := g.users[userID]
 	if !ok {
 		return
 	}
@@ -68,8 +58,8 @@ func (s *Server) SendStateTo(userID string, state pgame.State) {
 	})
 }
 
-func (s *Server) SendToChat(userID, text string) {
-	s.SendResponse(&connection.ServerResponse{
+func (g *Game) SendToChat(userID, text string) {
+	g.SendResponse(&connection.ServerResponse{
 		Response: &connection.ServerResponse_Chat{
 			Chat: &connection.ChatResponse{
 				Text:   text,
@@ -79,12 +69,12 @@ func (s *Server) SendToChat(userID, text string) {
 	}, userID)
 }
 
-func (s *Server) SendState(state pgame.State) {
+func (g *Game) SendState(state pgame.State) {
 	var filters []Filter
 	if state != pgame.State_END {
-		filters = append(filters, s.AliveFilter)
+		filters = append(filters, g.AliveFilter)
 	}
-	s.SendResponse(&connection.ServerResponse{
+	g.SendResponse(&connection.ServerResponse{
 		Response: &connection.ServerResponse_State{
 			State: &pgame.StateResponse{
 				State: state,
@@ -93,8 +83,8 @@ func (s *Server) SendState(state pgame.State) {
 	}, "", filters...)
 }
 
-func (s *Server) SendKillNotification(userID string) {
-	s.SendResponse(&connection.ServerResponse{
+func (g *Game) SendKillNotification(userID string) {
+	g.SendResponse(&connection.ServerResponse{
 		Response: &connection.ServerResponse_Kill{
 			Kill: &pgame.KillResponse{
 				UserId: userID,

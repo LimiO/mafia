@@ -1,6 +1,7 @@
 package status
 
 import (
+	"log"
 	pgame "mafia/pkg/proto/game"
 )
 
@@ -12,15 +13,18 @@ type Status struct {
 	Ended      map[string]bool
 }
 
-func (s *Status) SetDay() {
+func (s *Status) SetDay(gameID uint32) {
+	log.Printf("game №%d - status: DAY", gameID)
 	s.State = pgame.State_DAY
 }
 
-func (s *Status) SetNight() {
+func (s *Status) SetNight(gameID uint32) {
+	log.Printf("game №%d - status: NIGHT", gameID)
 	s.State = pgame.State_NIGHT
 }
 
-func (s *Status) EndGame() {
+func (s *Status) EndGame(gameID uint32) {
+	log.Printf("game №%d - status: END", gameID)
 	s.State = pgame.State_END
 }
 

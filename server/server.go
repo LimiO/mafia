@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
-	"sync"
-
 	"mafia/pkg/proto/game"
-	"mafia/server/status"
+	"net"
 
 	"google.golang.org/grpc"
 
@@ -26,79 +23,95 @@ type User struct {
 	role  game.Role
 }
 
-type Server struct {
-	Port  uint32
-	Host  string
-	users map[string]*User
+var GlobalGameID uint32 = 0
 
-	mu      sync.Mutex
-	status  status.Status
+type Server struct {
+	Port uint32
+
+	Games map[uint32]*Game
+
 	GrpcSrv *grpc.Server
 
 	connection.UnimplementedMafiaServerServer
 }
 
-func (s *Server) Commit(_ context.Context, request *game.CommitRequest) (*game.CommitResponse, error) {
-	if s.status.State != game.State_NIGHT {
+func (s *Server) Publish(_ context.Context, req *game.PublishRequest) (*game.PublishResponse, error) {
+	curGame := s.Games[req.Game]
+
+	if curGame.status.State != game.State_DAY {
 		return nil, fmt.Errorf("not available action")
 	}
-	userID := request.GetUserId()
-	role, ok := s.status.Roles[userID]
+	userID := req.GetUserId()
+	info := req.GetInfo()
+	curGame.SendToChat("game", fmt.Sprintf("user %q has info: %v", userID, info))
+	return &game.PublishResponse{}, nil
+}
+
+func (s *Server) Commit(_ context.Context, req *game.CommitRequest) (*game.CommitResponse, error) {
+	curGame := s.Games[req.Game]
+
+	if curGame.status.State != game.State_NIGHT {
+		return nil, fmt.Errorf("not available action")
+	}
+	userID := req.GetUserId()
+	role, ok := curGame.status.Roles[userID]
 	if !ok {
 		return nil, fmt.Errorf("failed to find this user in the game")
 	}
-	result := game.CommitResponse_OK
-	switch role {
-	case game.Role_HUMAN:
-		return nil, fmt.Errorf("human can't commit")
-	case game.Role_POLICE:
-		targetRole, _ := s.status.Roles[request.GetTarget()]
-		if targetRole != game.Role_MAFIA {
-			result = game.CommitResponse_FAIL
+	result := game.CommitResponse_FAIL
+	if role == game.Role_POLICE {
+		targetRole, _ := curGame.status.Roles[req.GetTarget()]
+		if targetRole == game.Role_MAFIA {
+			result = game.CommitResponse_OK
 		}
 	}
-	s.status.Commited[userID] = request.GetTarget()
+	curGame.status.Commited[userID] = req.GetTarget()
 	return &game.CommitResponse{
 		Result: result,
 	}, nil
 }
 
-func (s *Server) VoteBan(_ context.Context, request *game.VoteBanRequest) (*game.VoteBanResponse, error) {
-	if s.status.State != game.State_DAY {
+func (s *Server) VoteBan(_ context.Context, req *game.VoteBanRequest) (*game.VoteBanResponse, error) {
+	curGame := s.Games[req.Game]
+	if curGame.status.State != game.State_DAY {
 		return nil, fmt.Errorf("not available action")
 	}
-	userID := request.GetUserId()
-	s.status.VoteBanned[userID] = request.GetTarget()
+	userID := req.GetUserId()
+	curGame.status.VoteBanned[userID] = req.GetTarget()
 	return &game.VoteBanResponse{}, nil
 }
 
-func (s *Server) Chat(_ context.Context, request *game.ChatRequest) (*connection.ChatResponse, error) {
-	if s.status.State != game.State_DAY {
+func (s *Server) Chat(_ context.Context, req *game.ChatRequest) (*connection.ChatResponse, error) {
+	curGame := s.Games[req.Game]
+	if curGame.status.State != game.State_DAY {
 		return nil, fmt.Errorf("not available action")
 	}
-	userID := request.GetUserId()
-	s.SendToChat(userID, request.GetText())
+	userID := req.GetUserId()
+	curGame.SendToChat(userID, req.GetText())
 	return &connection.ChatResponse{
 		UserId: "Game",
 		Text:   "message successfully send",
 	}, nil
 }
 
-func (s *Server) End(_ context.Context, request *game.EndRequest) (*game.EndResponse, error) {
-	if s.status.State != game.State_DAY {
+func (s *Server) End(_ context.Context, req *game.EndRequest) (*game.EndResponse, error) {
+	curGame := s.Games[req.Game]
+	if curGame.status.State != game.State_DAY {
 		return nil, fmt.Errorf("not available action")
 	}
-	userID := request.GetUserId()
-	s.status.Ended[userID] = true
+	userID := req.GetUserId()
+	curGame.status.Ended[userID] = true
 	return &game.EndResponse{}, nil
 }
 
 func (s *Server) ListParticipants(
 	_ context.Context,
-	_ *connection.ListParticipantsRequest,
+	req *connection.ListParticipantsRequest,
 ) (*connection.ListParticipantsResponse, error) {
+	curGame := s.Games[req.Game]
+
 	var users []string
-	for key := range s.users {
+	for key := range curGame.users {
 		users = append(users, key)
 	}
 	return &connection.ListParticipantsResponse{
@@ -112,21 +125,33 @@ func (s *Server) Connect(
 ) error {
 	var rspType connection.UserJoinResponse_Type
 
-	s.mu.Lock()
-	if _, ok := s.users[req.GetUserId()]; ok {
+	var curGame *Game
+	for _, g := range s.Games {
+		if len(g.users) != MinPlayers {
+			curGame = g
+			break
+		}
+	}
+	if curGame == nil {
+		curGame = NewGame()
+		s.Games[curGame.gameID] = curGame
+	}
+
+	curGame.mu.Lock()
+	if _, ok := curGame.users[req.GetUserId()]; ok {
 		rspType = connection.UserJoinResponse_EXISTS
-	} else if len(s.users) == MinPlayers {
+	} else if len(curGame.users) == MinPlayers {
 		rspType = connection.UserJoinResponse_STARTED
 	} else {
 		rspType = connection.UserJoinResponse_OK
-		s.SendToChat(req.GetUserId(), "joined the status")
-		s.users[req.GetUserId()] = &User{
+		curGame.SendToChat(req.GetUserId(), "joined the game")
+		curGame.users[req.GetUserId()] = &User{
 			alive: true,
 			conn:  stream,
 		}
 		log.Printf("user %q joined", req.GetUserId())
 	}
-	s.mu.Unlock()
+	curGame.mu.Unlock()
 
 	stream.Send(&connection.ServerResponse{
 		Response: &connection.ServerResponse_Join{
@@ -140,12 +165,12 @@ func (s *Server) Connect(
 		select {
 		case <-stream.Context().Done():
 			if rspType == connection.UserJoinResponse_OK {
-				delete(s.users, userID)
-				if s.status.State == game.State_END {
+				delete(curGame.users, userID)
+				if curGame.status.State == game.State_END {
 					return nil
 				}
-				s.SendToChat(req.GetUserId(), "disconnected from the game")
-				s.SendKillNotification(req.GetUserId())
+				curGame.SendToChat(req.GetUserId(), "disconnected from the game")
+				curGame.SendKillNotification(req.GetUserId())
 				log.Printf("user %q disconnected", req.GetUserId())
 			}
 			return nil
@@ -156,17 +181,17 @@ func (s *Server) Connect(
 }
 
 func MakeServer() (*Server, error) {
-	return &Server{
-		Port:  9000,
-		Host:  "",
-		users: make(map[string]*User),
-		status: status.Status{
-			VoteBanned: map[string]string{},
-			Ended:      map[string]bool{},
-			Commited:   map[string]string{},
-			Roles:      map[string]game.Role{},
+	g := NewGame()
+	server := &Server{
+		Port: 9000,
+		Games: map[uint32]*Game{
+			g.gameID: g,
 		},
-	}, nil
+	}
+	srv := grpc.NewServer()
+	server.GrpcSrv = srv
+	connection.RegisterMafiaServerServer(server.GrpcSrv, server)
+	return server, nil
 }
 
 func (s *Server) StartListen() error {

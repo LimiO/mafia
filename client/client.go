@@ -2,8 +2,6 @@ package client
 
 import (
 	"fmt"
-	"time"
-
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 
@@ -59,14 +57,6 @@ func (c *Client) StartSession() error {
 		err = c.JoinGame()
 		if err != nil {
 			return fmt.Errorf("failed to join status: %v", err)
-		}
-		return nil
-	})
-	eg.Go(func() error {
-		time.Sleep(time.Second)
-		err = c.ListParticipants()
-		if err != nil {
-			return fmt.Errorf("failed to get list participants: %v", err)
 		}
 		return nil
 	})

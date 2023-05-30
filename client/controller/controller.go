@@ -2,12 +2,14 @@ package controller
 
 import (
 	pgame "mafia/pkg/proto/game"
+	"mafia/roles"
 )
 
 const (
-	chatOption    = "chat"
-	votebanOption = "voteban"
-	endDayOption  = "end day"
+	chatOption        = "chat"
+	votebanOption     = "voteban"
+	endDayOption      = "end day"
+	publishInfoOption = "publish info"
 )
 
 type Participant struct {
@@ -17,10 +19,28 @@ type Participant struct {
 
 type Controller struct {
 	State pgame.State
-	Role  pgame.Role
+	Role  roles.Role
+
+	DayNumber int
+	GameID    uint32
 
 	Participants map[string]*Participant
 	ID           string
+}
+
+func (c *Controller) SetGameID(gameID uint32) {
+	c.GameID = gameID
+}
+
+func (c *Controller) SetRole(role pgame.Role) {
+	switch role {
+	case pgame.Role_HUMAN:
+		c.Role = &roles.Human{}
+	case pgame.Role_MAFIA:
+		c.Role = &roles.Mafia{}
+	case pgame.Role_POLICE:
+		c.Role = &roles.Police{}
+	}
 }
 
 func (c *Controller) MakeParticipantIds() []string {
