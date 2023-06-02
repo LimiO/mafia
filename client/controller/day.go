@@ -3,9 +3,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"log"
-
-	"mafia/client/cli"
 	connection "mafia/pkg/proto/connection"
 	pgame "mafia/pkg/proto/game"
 )
@@ -26,17 +23,11 @@ func (c *Controller) GetOptions() []string {
 
 func (c *Controller) ProcessDay(client connection.MafiaServerClient) {
 	for {
+		var err error
 		if c.State != pgame.State_DAY {
 			return
 		}
-		selected, err := cli.AskSelect(
-			"Select action to do",
-			c.GetOptions(),
-		)
-		if err != nil {
-			log.Printf("failed to process day: %v", err)
-			return
-		}
+		selected := c.SelectAction("Select target to do", c.GetOptions())
 		switch selected {
 		case chatOption:
 			err = c.GetAndSendMessage(client)
@@ -48,6 +39,9 @@ func (c *Controller) ProcessDay(client connection.MafiaServerClient) {
 		case publishInfoOption:
 			err = c.PublishInfo(client)
 		}
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -55,11 +49,8 @@ func (c *Controller) ProcessSpirit() {
 }
 
 func (c *Controller) GetAndSendMessage(client connection.MafiaServerClient) error {
-	msg, err := cli.AskInput("Type message to send")
-	if err != nil {
-		return fmt.Errorf("failed to ask input: %v", err)
-	}
-	_, err = client.Chat(context.Background(), &pgame.ChatRequest{
+	msg := c.AskInput("Type message to send")
+	_, err := client.Chat(context.Background(), &pgame.ChatRequest{
 		UserId: c.ID,
 		Text:   msg,
 		Game:   c.GameID,
@@ -75,14 +66,11 @@ func (c *Controller) SelectAndVoteBan(client connection.MafiaServerClient) error
 		}
 		users = append(users, participantID)
 	}
-	msg, err := cli.AskSelect("Select target to vote:", users)
-	if err != nil {
-		return fmt.Errorf("failed to ask input: %v", err)
-	}
+	target := c.SelectAction("Select target to vote:", users)
 
-	_, err = client.VoteBan(context.Background(), &pgame.VoteBanRequest{
+	_, err := client.VoteBan(context.Background(), &pgame.VoteBanRequest{
 		UserId: c.ID,
-		Target: msg,
+		Target: target,
 		Game:   c.GameID,
 	})
 	return err

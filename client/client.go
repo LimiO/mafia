@@ -18,7 +18,7 @@ type Client struct {
 
 func MakeClient(id string) (*Client, error) {
 	return &Client{
-		ServerPort: 9000,
+		ServerPort: 9001,
 		Ctl: controller.Controller{
 			ID:           id,
 			Participants: map[string]*controller.Participant{},

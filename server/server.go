@@ -183,7 +183,7 @@ func (s *Server) Connect(
 func MakeServer() (*Server, error) {
 	g := NewGame()
 	server := &Server{
-		Port: 9000,
+		Port: 9001,
 		Games: map[uint32]*Game{
 			g.gameID: g,
 		},

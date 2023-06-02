@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"mafia/client/cli"
 	connection "mafia/pkg/proto/connection"
 	pgame "mafia/pkg/proto/game"
 )
@@ -16,11 +15,7 @@ func (c *Controller) ProcessNight(client connection.MafiaServerClient) {
 	}
 
 	ids := c.MakeAliveParticipantIds()
-	selected, err := cli.AskSelect("Select target to do", ids)
-	if err != nil {
-		log.Printf("failed to ask select: %v", err)
-		return
-	}
+	selected := c.SelectAction("Select target to do", ids)
 	c.State = pgame.State_SPIRIT
 
 	rsp, err := client.Commit(context.Background(), &pgame.CommitRequest{

@@ -1,6 +1,11 @@
 package controller
 
 import (
+	"fmt"
+	"math/rand"
+
+	"mafia/client/cli"
+	"mafia/client/internal"
 	pgame "mafia/pkg/proto/game"
 	"mafia/roles"
 )
@@ -21,11 +26,31 @@ type Controller struct {
 	State pgame.State
 	Role  roles.Role
 
+	IsAuto    bool
 	DayNumber int
 	GameID    uint32
 
 	Participants map[string]*Participant
 	ID           string
+}
+
+func (c *Controller) SelectAction(msg string, options []string) string {
+	if c.IsAuto {
+		fmt.Println(options)
+		selected := options[rand.Intn(100000)%len(options)]
+		fmt.Printf("Selected random option to msg \"%s...\": %q\n", msg[:10], selected)
+		return selected
+	}
+	return cli.AskSelect(msg, options)
+}
+
+func (c *Controller) AskInput(msg string) string {
+	if c.IsAuto {
+		result := internal.RandStringRunes(10)
+		fmt.Printf("message to send: %q\n", result)
+		return result
+	}
+	return cli.AskInput(msg)
 }
 
 func (c *Controller) SetGameID(gameID uint32) {

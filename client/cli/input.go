@@ -4,30 +4,30 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/dixonwille/wmenu/v5"
 )
 
-func AskSelect(message string, options []string) (string, error) {
-	prompt := &survey.Select{
-		Message: message,
-		Options: options,
-	}
+func AskSelect(message string, options []string) string {
+	menu := wmenu.NewMenu(message)
 
-	var selected string
-	err := survey.AskOne(prompt, &selected, survey.WithValidator(survey.Required))
-	if err != nil {
-		return "", fmt.Errorf("failed to select option: %v", err)
+	var result string
+	menu.Action(func(opts []wmenu.Opt) error {
+		fmt.Printf("You selected: %q\n", opts[0].Text)
+		result = opts[0].Text
+		return nil
+	})
+	for _, option := range options {
+		menu.Option(option, nil, false, nil)
 	}
-	return selected, nil
+	_ = menu.Run()
+	return result
 }
 
-func AskInput(message string) (string, error) {
+func AskInput(message string) string {
 	answer := ""
 	prompt := &survey.Input{
 		Message: message,
 	}
-	err := survey.AskOne(prompt, &answer)
-	if err != nil {
-		return "", fmt.Errorf("failed to ask input: %v", err)
-	}
-	return answer, nil
+	_ = survey.AskOne(prompt, &answer)
+	return answer
 }
