@@ -34,7 +34,14 @@ func (g *Game) ProcessDay() {
 }
 
 func (g *Game) ProcessNight() {
-	if len(g.status.Commited) != MinCommitPlayers {
+	needCommit := 0
+	for _, role := range g.status.Roles {
+		if role == game.Role_HUMAN {
+			continue
+		}
+		needCommit++
+	}
+	if len(g.status.Commited) != needCommit {
 		return
 	}
 	var results []string

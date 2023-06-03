@@ -11,6 +11,7 @@ type Status struct {
 	VoteBanned map[string]string
 	Commited   map[string]string
 	Ended      map[string]bool
+	Started    bool
 }
 
 func (s *Status) SetDay(gameID uint32) {

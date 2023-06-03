@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  server:
+      container_name: server
+      restart: always
+      build:
+        context: ../
+        dockerfile: docker/Dockerfile
+      volumes:
+        - ..:/server:rw
+      ports:
+        - "9000:9000"

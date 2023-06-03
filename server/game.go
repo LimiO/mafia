@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"mafia/pkg/proto/game"
@@ -31,6 +32,7 @@ func NewGame() *Game {
 			Ended:      map[string]bool{},
 			Commited:   map[string]string{},
 			Roles:      map[string]game.Role{},
+			Started:    false,
 		},
 		gameID: GlobalGameID,
 	}
@@ -97,4 +99,21 @@ func (g *Game) Ban() {
 	g.users[maxBannedID].alive = false
 	g.SendToChat("game", fmt.Sprintf("user %q because of poll", maxBannedID))
 	g.SendKillNotification(maxBannedID)
+}
+
+func (g *Game) DeleteUser(userID string) {
+	delete(g.users, userID)
+	delete(g.status.Ended, userID)
+	delete(g.status.Roles, userID)
+	delete(g.status.VoteBanned, userID)
+	delete(g.status.Commited, userID)
+	if g.status.State == game.State_END {
+		return
+	}
+	g.SendToChat(userID, "disconnected from the game")
+	g.SendKillNotification(userID)
+	log.Printf("user %q disconnected", userID)
+	if len(g.users) == 0 {
+		g.status.EndGame(g.gameID)
+	}
 }

@@ -17,7 +17,7 @@ func (c *Client) JoinGame() error {
 	req := &connection.UserJoinRequest{
 		UserId: c.Ctl.ID,
 	}
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Minute))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(20*time.Minute))
 	defer cancel()
 	rsp, err := c.GrpcClient.Connect(ctx, req)
 	if err != nil {

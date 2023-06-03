@@ -5,19 +5,29 @@ import (
 	"os"
 
 	"mafia/client"
+	"mafia/internal"
 )
 
 func main() {
 	if len(os.Args) == 1 {
-		panic(fmt.Errorf("name param must be given"))
+		panic(fmt.Errorf("failed to parse args"))
 	}
 
-	client, err := client.MakeClient(os.Args[1])
+	isAuto := len(os.Args) > 1 && os.Args[1] == "auto"
+	var name string
+	if isAuto {
+		name = internal.RandStringRunes(5)
+		fmt.Println(name, 123)
+	} else {
+		name = os.Args[1]
+	}
+
+	mafiaClient, err := client.MakeClient(name)
 	if err != nil {
 		panic(fmt.Errorf("failed to make client: %v", err))
 	}
-	client.Ctl.IsAuto = len(os.Args) > 2
-	err = client.StartSession()
+	mafiaClient.Ctl.IsAuto = isAuto
+	err = mafiaClient.StartSession()
 	if err != nil {
 		panic(fmt.Errorf("failed to join status: %v", err))
 	}

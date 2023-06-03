@@ -2,10 +2,11 @@ package controller
 
 import (
 	"fmt"
+	"mafia/internal"
 	"math/rand"
+	"time"
 
 	"mafia/client/cli"
-	"mafia/client/internal"
 	pgame "mafia/pkg/proto/game"
 	"mafia/roles"
 )
@@ -36,8 +37,8 @@ type Controller struct {
 
 func (c *Controller) SelectAction(msg string, options []string) string {
 	if c.IsAuto {
-		fmt.Println(options)
-		selected := options[rand.Intn(100000)%len(options)]
+		rand.Seed(time.Now().UnixNano())
+		selected := options[rand.Intn(100001)%len(options)]
 		fmt.Printf("Selected random option to msg \"%s...\": %q\n", msg[:10], selected)
 		return selected
 	}
@@ -46,6 +47,7 @@ func (c *Controller) SelectAction(msg string, options []string) string {
 
 func (c *Controller) AskInput(msg string) string {
 	if c.IsAuto {
+		rand.Seed(time.Now().UnixNano())
 		result := internal.RandStringRunes(10)
 		fmt.Printf("message to send: %q\n", result)
 		return result

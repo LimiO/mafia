@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	MinPlayers       = 4
-	MinCommitPlayers = 2
+	MinPlayers = 4
 )
 
 type User struct {
@@ -127,7 +126,7 @@ func (s *Server) Connect(
 
 	var curGame *Game
 	for _, g := range s.Games {
-		if len(g.users) != MinPlayers {
+		if !g.status.Started {
 			curGame = g
 			break
 		}
@@ -140,7 +139,7 @@ func (s *Server) Connect(
 	curGame.mu.Lock()
 	if _, ok := curGame.users[req.GetUserId()]; ok {
 		rspType = connection.UserJoinResponse_EXISTS
-	} else if len(curGame.users) == MinPlayers {
+	} else if curGame.status.Started {
 		rspType = connection.UserJoinResponse_STARTED
 	} else {
 		rspType = connection.UserJoinResponse_OK
@@ -165,13 +164,7 @@ func (s *Server) Connect(
 		select {
 		case <-stream.Context().Done():
 			if rspType == connection.UserJoinResponse_OK {
-				delete(curGame.users, userID)
-				if curGame.status.State == game.State_END {
-					return nil
-				}
-				curGame.SendToChat(req.GetUserId(), "disconnected from the game")
-				curGame.SendKillNotification(req.GetUserId())
-				log.Printf("user %q disconnected", req.GetUserId())
+				curGame.DeleteUser(userID)
 			}
 			return nil
 		default:
@@ -183,7 +176,7 @@ func (s *Server) Connect(
 func MakeServer() (*Server, error) {
 	g := NewGame()
 	server := &Server{
-		Port: 9001,
+		Port: 9000,
 		Games: map[uint32]*Game{
 			g.gameID: g,
 		},

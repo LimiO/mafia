@@ -1,7 +1,7 @@
 package internal
 
 import (
-	game "mafia/pkg/proto/game"
+	"mafia/pkg/proto/game"
 	"math/rand"
 )
 

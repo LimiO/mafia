@@ -3,13 +3,13 @@ package server
 import (
 	"fmt"
 	"log"
+	"mafia/internal"
 	"time"
 
 	"golang.org/x/sync/errgroup"
 
 	connection "mafia/pkg/proto/connection"
 	"mafia/pkg/proto/game"
-	"mafia/server/internal"
 )
 
 func (s *Server) Start() error {
@@ -47,6 +47,7 @@ func (g *Game) StartGame() error {
 	for userID, role := range roles {
 		g.status.Roles[userID] = role
 	}
+	g.status.Started = true
 	g.SendToChat("game", "Game started!")
 	g.status.SetDay(g.gameID)
 	return nil
