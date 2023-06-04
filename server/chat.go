@@ -1,8 +1,8 @@
 package server
 
 import (
+	"fmt"
 	"log"
-
 	connection "mafia/pkg/proto/connection"
 	pgame "mafia/pkg/proto/game"
 )
@@ -59,6 +59,14 @@ func (g *Game) SendStateTo(userID string, state pgame.State) {
 }
 
 func (g *Game) SendToChat(userID, text string) {
+	msg := fmt.Sprintf("[%s]: %s", userID, text)
+	for playerID := range g.users {
+		key := fmt.Sprintf("client.%d.%s", g.gameID, playerID)
+		err := g.QueueCtl.Push(key, "all", msg)
+		if err != nil {
+			fmt.Printf("failed to push message to queue: %v", err)
+		}
+	}
 	g.SendResponse(&connection.ServerResponse{
 		Response: &connection.ServerResponse_Chat{
 			Chat: &connection.ChatResponse{

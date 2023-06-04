@@ -1,4 +1,4 @@
-package controller
+package gamecontroller
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	pgame "mafia/pkg/proto/game"
 )
 
-func (c *Controller) GetOptions() []string {
+func (c *Controller) GetDayOptions() []string {
 	options := []string{chatOption, endDayOption}
 	if c.DayNumber == 0 {
 		return options
@@ -27,10 +27,10 @@ func (c *Controller) ProcessDay(client connection.MafiaServerClient) {
 		if c.State != pgame.State_DAY {
 			return
 		}
-		selected := c.SelectAction("Select target to do", c.GetOptions())
+		selected := c.SelectAction("Select target to do", c.GetDayOptions())
 		switch selected {
 		case chatOption:
-			err = c.GetAndSendMessage(client)
+			c.GetAndSendMessage()
 		case votebanOption:
 			err = c.SelectAndVoteBan(client)
 		case endDayOption:
@@ -48,24 +48,13 @@ func (c *Controller) ProcessDay(client connection.MafiaServerClient) {
 func (c *Controller) ProcessSpirit() {
 }
 
-func (c *Controller) GetAndSendMessage(client connection.MafiaServerClient) error {
+func (c *Controller) GetAndSendMessage() {
 	msg := c.AskInput("Type message to send")
-	_, err := client.Chat(context.Background(), &pgame.ChatRequest{
-		UserId: c.ID,
-		Text:   msg,
-		Game:   c.GameID,
-	})
-	return err
+	c.ChatChan <- fmt.Sprintf("[%s]: %s", c.ID, msg)
 }
 
 func (c *Controller) SelectAndVoteBan(client connection.MafiaServerClient) error {
-	var users []string
-	for participantID, participant := range c.Participants {
-		if !participant.Alive || participantID == c.ID {
-			continue
-		}
-		users = append(users, participantID)
-	}
+	users := c.makeSelectParticipants()
 	target := c.SelectAction("Select target to vote:", users)
 
 	_, err := client.VoteBan(context.Background(), &pgame.VoteBanRequest{

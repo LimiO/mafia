@@ -17,16 +17,14 @@ func main() {
 	var name string
 	if isAuto {
 		name = internal.RandStringRunes(5)
-		fmt.Println(name, 123)
 	} else {
 		name = os.Args[1]
 	}
-
 	mafiaClient, err := client.MakeClient(name)
 	if err != nil {
 		panic(fmt.Errorf("failed to make client: %v", err))
 	}
-	mafiaClient.Ctl.IsAuto = isAuto
+	mafiaClient.GameCtl.IsAuto = isAuto
 	err = mafiaClient.StartSession()
 	if err != nil {
 		panic(fmt.Errorf("failed to join status: %v", err))

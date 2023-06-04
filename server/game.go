@@ -2,7 +2,9 @@ package server
 
 import (
 	"fmt"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"log"
+	"mafia/internal/queue"
 	"sync"
 
 	"mafia/pkg/proto/game"
@@ -21,10 +23,13 @@ type Game struct {
 	users  map[string]*User
 	mu     sync.Mutex
 	status status.Status
+
+	QueueCtl *queue.Controller
+
 	gameID uint32
 }
 
-func NewGame() *Game {
+func NewGame() (*Game, error) {
 	g := &Game{
 		users: make(map[string]*User),
 		status: status.Status{
@@ -36,8 +41,32 @@ func NewGame() *Game {
 		},
 		gameID: GlobalGameID,
 	}
+	cfg := &queue.Config{
+		Addr:                 queue.Addr,
+		RoutingKeys:          []string{queue.AllKey, queue.MafiaKey},
+		ProducerExchangeName: []string{},
+		ConsumerExchangeName: "server",
+	}
+	queueCtl, err := queue.NewController(cfg, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make queue controller: %v", err)
+	}
+	g.QueueCtl = queueCtl
+
+	go func() error {
+		return queueCtl.StartConsume(func(delivery amqp.Delivery) error {
+			for userID := range g.users {
+				exchangeName := fmt.Sprintf("client.%d.%s", g.gameID, userID)
+				err = queueCtl.Push(exchangeName, delivery.RoutingKey, string(delivery.Body))
+				if err != nil {
+					return fmt.Errorf("failed to push to key %s: %v", delivery.RoutingKey, err)
+				}
+			}
+			return nil
+		})
+	}()
 	GlobalGameID++
-	return g
+	return g, nil
 }
 
 func (g *Game) AliveFilter(userID string) bool {

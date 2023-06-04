@@ -29,6 +29,9 @@ func (g *Game) StartGame() error {
 	}
 	roles := internal.ShuffleRoles(users)
 
+	g.SendToChat("game", "Game started!")
+	time.Sleep(3 * time.Second)
+
 	for userID, user := range g.users {
 		user.role = roles[userID]
 		err := user.conn.Send(&connection.ServerResponse{
@@ -48,7 +51,6 @@ func (g *Game) StartGame() error {
 		g.status.Roles[userID] = role
 	}
 	g.status.Started = true
-	g.SendToChat("game", "Game started!")
 	g.status.SetDay(g.gameID)
 	return nil
 }

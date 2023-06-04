@@ -11,11 +11,9 @@ import (
 	connection "mafia/pkg/proto/connection"
 )
 
-// stream
-
 func (c *Client) JoinGame() error {
 	req := &connection.UserJoinRequest{
-		UserId: c.Ctl.ID,
+		UserId: c.GameCtl.ID,
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(20*time.Minute))
 	defer cancel()
@@ -25,7 +23,7 @@ func (c *Client) JoinGame() error {
 	}
 
 	for {
-		if c.Ctl.State == pgame.State_END {
+		if c.GameCtl.State == pgame.State_END {
 			return nil
 		}
 		resp, err := rsp.Recv()
@@ -44,21 +42,4 @@ func (c *Client) JoinGame() error {
 		}
 		time.Sleep(time.Second)
 	}
-}
-
-func (c *Client) ProcessJoinResponse(rsp *connection.UserJoinResponse) error {
-	switch rsp.Type {
-	case connection.UserJoinResponse_OK:
-		log.Println("User joined")
-	case connection.UserJoinResponse_EXISTS:
-		log.Fatalf("User already exists, join with another name")
-	case connection.UserJoinResponse_STARTED:
-		log.Fatalf("Game already started")
-	}
-	return nil
-}
-
-func (c *Client) ProcessChatResponse(rsp *connection.ChatResponse) error {
-	log.Printf("user %q: %s", rsp.GetUserId(), rsp.GetText())
-	return nil
 }

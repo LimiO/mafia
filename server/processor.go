@@ -12,7 +12,7 @@ func (g *Game) ProcessWarmup() error {
 	}
 	err := g.StartGame()
 	if err != nil {
-		return fmt.Errorf("failed to start controller: %v", err)
+		return fmt.Errorf("failed to start gamecontroller: %v", err)
 	}
 	return nil
 }
@@ -64,6 +64,7 @@ func (g *Game) ProcessNight() {
 	if status := g.EndGameStatus(); status != STATUS_NOT_YET {
 		g.status.EndGame(g.gameID)
 	} else {
+		g.status.Ended = map[string]bool{}
 		g.status.SetDay(g.gameID)
 		g.SendToChat("game", "GAME STATUS: DAY")
 		g.SendState(game.State_DAY)

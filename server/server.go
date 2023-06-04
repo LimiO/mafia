@@ -85,8 +85,8 @@ func (s *Server) Chat(_ context.Context, req *game.ChatRequest) (*connection.Cha
 	if curGame.status.State != game.State_DAY {
 		return nil, fmt.Errorf("not available action")
 	}
-	userID := req.GetUserId()
-	curGame.SendToChat(userID, req.GetText())
+	//userID := req.GetUserId()
+	//curGame.SendToChat(userID, req.GetText())
 	return &connection.ChatResponse{
 		UserId: "Game",
 		Text:   "message successfully send",
@@ -132,7 +132,11 @@ func (s *Server) Connect(
 		}
 	}
 	if curGame == nil {
-		curGame = NewGame()
+		var err error
+		curGame, err = NewGame()
+		if err != nil {
+			return fmt.Errorf("failed to make game: %v", err)
+		}
 		s.Games[curGame.gameID] = curGame
 	}
 
@@ -143,6 +147,10 @@ func (s *Server) Connect(
 		rspType = connection.UserJoinResponse_STARTED
 	} else {
 		rspType = connection.UserJoinResponse_OK
+		err := curGame.QueueCtl.AddProducer(fmt.Sprintf("client.%d.%s", curGame.gameID, req.GetUserId()))
+		if err != nil {
+			return fmt.Errorf("failed to add producer")
+		}
 		curGame.SendToChat(req.GetUserId(), "joined the game")
 		curGame.users[req.GetUserId()] = &User{
 			alive: true,
@@ -174,7 +182,10 @@ func (s *Server) Connect(
 }
 
 func MakeServer() (*Server, error) {
-	g := NewGame()
+	g, err := NewGame()
+	if err != nil {
+		return nil, fmt.Errorf("failed to make game: %v", err)
+	}
 	server := &Server{
 		Port: 9000,
 		Games: map[uint32]*Game{
