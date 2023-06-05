@@ -2,12 +2,21 @@ version: '3.9'
 
 services:
   server:
-      container_name: server
-      restart: always
-      build:
-        context: ../
-        dockerfile: docker/Dockerfile
-      volumes:
-        - ..:/server:rw
-      ports:
-        - "9000:9000"
+    container_name: server
+    restart: always
+    hostname: server
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.server
+    depends_on: [rabbitmq]
+    volumes:
+      - ..:/server:rw
+    ports:
+      - "9000:9000"
+
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: "rabbitmq"
+    ports:
+      - "15672:15672"
+      - "5672:5672"

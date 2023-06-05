@@ -23,7 +23,7 @@ func (c *Client) ProcessStartResponse(rsp *connection.StartGameResponse) error {
 	c.GameCtl.State = game.State_DAY
 
 	cfg := &queue.Config{
-		Addr:                 queue.Addr,
+		Addr:                 "amqp://guest:guest@localhost:5672/",
 		RoutingKeys:          []string{queue.AllKey, queue.MafiaKey},
 		ProducerExchangeName: []string{},
 		ConsumerExchangeName: fmt.Sprintf("client.%d.%s", rsp.Game, c.GameCtl.ID),
@@ -65,7 +65,7 @@ func (c *Client) ProcessKillResponse(rsp *game.KillResponse) error {
 	userID := rsp.GetUserId()
 	participant, ok := c.GameCtl.Participants[userID]
 	if !ok {
-		return fmt.Errorf("cannot find user %q to kill", userID)
+		return nil
 	}
 	participant.Alive = false
 	if userID == c.GameCtl.ID {

@@ -199,7 +199,7 @@ func MakeServer() (*Server, error) {
 }
 
 func (s *Server) StartListen() error {
-	conn, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
+	conn, err := net.Listen("tcp", fmt.Sprintf("server:%d", s.Port))
 	if err != nil {
 		return fmt.Errorf("failed to make tcp connection to port %d: %v", s.Port, err)
 	}

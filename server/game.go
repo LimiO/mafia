@@ -142,7 +142,7 @@ func (g *Game) DeleteUser(userID string) {
 	g.SendToChat(userID, "disconnected from the game")
 	g.SendKillNotification(userID)
 	log.Printf("user %q disconnected", userID)
-	if len(g.users) == 0 {
+	if len(g.users) == 0 && g.status.Started {
 		g.status.EndGame(g.gameID)
 	}
 }

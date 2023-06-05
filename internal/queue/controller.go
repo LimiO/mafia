@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	Addr     = "amqp://guest:guest@localhost:5672/"
+	Addr     = "amqp://guest:guest@rabbitmq:5672/"
 	MafiaKey = "mafia"
 	AllKey   = "all"
 )
