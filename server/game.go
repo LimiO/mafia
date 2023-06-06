@@ -29,6 +29,25 @@ type Game struct {
 	gameID uint32
 }
 
+func (s *Server) GetOrCreateGame() (*Game, error) {
+	var curGame *Game
+	for _, g := range s.Games {
+		if !g.status.Started {
+			curGame = g
+			break
+		}
+	}
+	if curGame == nil {
+		var err error
+		curGame, err = NewGame()
+		if err != nil {
+			return nil, fmt.Errorf("failed to make game: %v", err)
+		}
+		s.Games[curGame.gameID] = curGame
+	}
+	return curGame, nil
+}
+
 func NewGame() (*Game, error) {
 	g := &Game{
 		users: make(map[string]*User),

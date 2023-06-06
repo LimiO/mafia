@@ -122,48 +122,31 @@ func (s *Server) Connect(
 	req *connection.UserJoinRequest,
 	stream connection.MafiaServer_ConnectServer,
 ) error {
-	var rspType connection.UserJoinResponse_Type
-
-	var curGame *Game
-	for _, g := range s.Games {
-		if !g.status.Started {
-			curGame = g
-			break
-		}
-	}
-	if curGame == nil {
-		var err error
-		curGame, err = NewGame()
-		if err != nil {
-			return fmt.Errorf("failed to make game: %v", err)
-		}
-		s.Games[curGame.gameID] = curGame
+	curGame, err := s.GetOrCreateGame()
+	if err != nil {
+		return fmt.Errorf("failed to get or create new game: %v", err)
 	}
 
-	curGame.mu.Lock()
+	// TODO поменять тут на проверку в базе данных
 	if _, ok := curGame.users[req.GetUserId()]; ok {
-		rspType = connection.UserJoinResponse_EXISTS
-	} else if curGame.status.Started {
-		rspType = connection.UserJoinResponse_STARTED
-	} else {
-		rspType = connection.UserJoinResponse_OK
-		err := curGame.QueueCtl.AddProducer(fmt.Sprintf("client.%d.%s", curGame.gameID, req.GetUserId()))
-		if err != nil {
-			return fmt.Errorf("failed to add producer")
-		}
-		curGame.SendToChat(req.GetUserId(), "joined the game")
-		curGame.users[req.GetUserId()] = &User{
-			alive: true,
-			conn:  stream,
-		}
-		log.Printf("user %q joined", req.GetUserId())
+		return fmt.Errorf("name exists")
 	}
-	curGame.mu.Unlock()
+
+	err = curGame.QueueCtl.AddProducer(fmt.Sprintf("client.%d.%s", curGame.gameID, req.GetUserId()))
+	if err != nil {
+		return fmt.Errorf("failed to add producer")
+	}
+	curGame.SendToChat(req.GetUserId(), "joined the game")
+	curGame.users[req.GetUserId()] = &User{
+		alive: true,
+		conn:  stream,
+	}
+	log.Printf("user %q joined", req.GetUserId())
 
 	stream.Send(&connection.ServerResponse{
 		Response: &connection.ServerResponse_Join{
 			Join: &connection.UserJoinResponse{
-				Type: rspType,
+				Type: connection.UserJoinResponse_OK,
 			},
 		},
 	})
@@ -171,9 +154,7 @@ func (s *Server) Connect(
 	for {
 		select {
 		case <-stream.Context().Done():
-			if rspType == connection.UserJoinResponse_OK {
-				curGame.DeleteUser(userID)
-			}
+			curGame.DeleteUser(userID)
 			return nil
 		default:
 			continue

@@ -1,6 +1,13 @@
 version: '3.9'
 
 services:
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:management
+    hostname: "rabbitmq"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
   server:
     container_name: server
     restart: always
@@ -8,15 +15,9 @@ services:
     build:
       context: ../
       dockerfile: docker/Dockerfile.server
-    depends_on: [rabbitmq]
+    depends_on:
+      - rabbitmq
     volumes:
       - ..:/server:rw
     ports:
       - "9000:9000"
-
-  rabbitmq:
-    image: rabbitmq:management
-    hostname: "rabbitmq"
-    ports:
-      - "15672:15672"
-      - "5672:5672"
