@@ -1,8 +1,9 @@
-package internal
+package helpers
 
 import (
-	"mafia/pkg/proto/game"
 	"math/rand"
+
+	"mafia/pkg/proto/game"
 )
 
 func ShuffleRoles(users []string) map[string]game.Role {

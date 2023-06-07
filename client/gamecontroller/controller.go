@@ -30,6 +30,7 @@ type Controller struct {
 
 	Participants map[string]*Participant
 	ID           string
+	Password     string
 }
 
 func (c *Controller) SetGameID(gameID uint32) {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"mafia/client/cli"
-	"mafia/internal"
+	"mafia/internal/helpers"
 )
 
 func (c *Controller) SelectAction(msg string, options []string) string {
@@ -22,7 +22,7 @@ func (c *Controller) SelectAction(msg string, options []string) string {
 func (c *Controller) AskInput(msg string) string {
 	if c.IsAuto {
 		rand.Seed(time.Now().UnixNano())
-		result := internal.RandStringRunes(10)
+		result := helpers.RandStringRunes(10)
 		fmt.Printf("message to send: %q\n", result)
 		return result
 	}

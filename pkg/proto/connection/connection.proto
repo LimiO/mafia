@@ -1,14 +1,15 @@
 syntax = "proto3";
 package connection;
 
-import "game/actions.proto";
-import "game/state.proto";
-import "game/roles.proto";
+import "pkg/proto/game/actions.proto";
+import "pkg/proto/game/state.proto";
+import "pkg/proto/game/roles.proto";
 
 option go_package = "mafia.connection";
 
 message UserJoinRequest {
   string user_id = 1;
+  string password = 2;
 }
 
 message UserJoinResponse {

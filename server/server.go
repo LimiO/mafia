@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"mafia/pkg/proto/game"
 	"net"
 
 	"google.golang.org/grpc"
 
+	"mafia/internal/db"
 	connection "mafia/pkg/proto/connection"
+	"mafia/pkg/proto/game"
 )
 
 const (
@@ -29,7 +30,8 @@ type Server struct {
 
 	Games map[uint32]*Game
 
-	GrpcSrv *grpc.Server
+	GrpcSrv   *grpc.Server
+	DBManager *db.Manager
 
 	connection.UnimplementedMafiaServerServer
 }
@@ -122,12 +124,18 @@ func (s *Server) Connect(
 	req *connection.UserJoinRequest,
 	stream connection.MafiaServer_ConnectServer,
 ) error {
+	// TODO добавить генерацию прото файлов в докер
+	// TODO поменять тут на проверку в базе данных
+	//err := s.AuthorizeOrRegisterUser(req.GetUserId(), req.GetPassword())
+	//if err != nil {
+	//	return fmt.Errorf("failed to authorize user: %v", err)
+	//}
+
 	curGame, err := s.GetOrCreateGame()
 	if err != nil {
 		return fmt.Errorf("failed to get or create new game: %v", err)
 	}
 
-	// TODO поменять тут на проверку в базе данных
 	if _, ok := curGame.users[req.GetUserId()]; ok {
 		return fmt.Errorf("name exists")
 	}
@@ -167,11 +175,20 @@ func MakeServer() (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to make game: %v", err)
 	}
+	dbCfg := &db.Config{
+		DBName: "mafia.db",
+	}
+	mgr, err := db.NewManager(dbCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create manager: %v", err)
+	}
+
 	server := &Server{
 		Port: 9000,
 		Games: map[uint32]*Game{
 			g.gameID: g,
 		},
+		DBManager: mgr,
 	}
 	srv := grpc.NewServer()
 	server.GrpcSrv = srv
@@ -187,7 +204,7 @@ func (s *Server) StartListen() error {
 
 	srv := grpc.NewServer()
 	s.GrpcSrv = srv
-
+	// TODO закрыть сервер через defer
 	connection.RegisterMafiaServerServer(srv, s)
 	log.Println("server started!")
 	err = srv.Serve(conn)

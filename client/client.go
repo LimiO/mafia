@@ -22,12 +22,13 @@ type Client struct {
 	GrpcClient connection.MafiaServerClient
 }
 
-func MakeClient(id string) (*Client, error) {
+func MakeClient(id string, password string) (*Client, error) {
 	chatChan := make(chan string, 100)
 	return &Client{
 		ServerPort: 9000,
 		GameCtl: &gamecontroller.Controller{
 			ID:           id,
+			Password:     password,
 			Participants: map[string]*gamecontroller.Participant{},
 			ChatChan:     chatChan,
 		},

@@ -13,7 +13,8 @@ import (
 
 func (c *Client) JoinGame() error {
 	req := &connection.UserJoinRequest{
-		UserId: c.GameCtl.ID,
+		UserId:   c.GameCtl.ID,
+		Password: c.GameCtl.Password,
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(20*time.Minute))
 	defer cancel()

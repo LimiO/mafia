@@ -6,6 +6,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/dixonwille/wlog/v3 v3.0.1
 	github.com/dixonwille/wmenu/v5 v5.1.0
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/rabbitmq/amqp091-go v1.8.1
 	golang.org/x/sync v0.2.0
 	google.golang.org/grpc v1.55.0

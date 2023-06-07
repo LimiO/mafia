@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 	"log"
-	"mafia/internal"
+	"mafia/internal/helpers"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -27,7 +27,7 @@ func (g *Game) StartGame() error {
 	for user := range g.users {
 		users = append(users, user)
 	}
-	roles := internal.ShuffleRoles(users)
+	roles := helpers.ShuffleRoles(users)
 
 	g.SendToChat("game", "Game started!")
 	time.Sleep(3 * time.Second)
@@ -90,4 +90,7 @@ func (s *Server) StopGame(g *Game) {
 	}
 	g.SendToChat("game", msg)
 	g.SendState(game.State_END)
+	for userID := range g.users {
+		fmt.Println(userID)
+	}
 }
