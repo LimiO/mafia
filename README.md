@@ -34,7 +34,7 @@ make bot  # создает бота, который будет выбирать 
 ```
 cd docker
 docker compose build
-docker compose up infroserver
+docker compose up infoserver
 ```
 
 Основные методы:
