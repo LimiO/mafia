@@ -3,6 +3,7 @@
 
 Предварительно необходимо запустить rabbitmq
 ```
+make dirs
 cd docker
 docker-compose build
 docker-compose up rabbitmq

@@ -1,3 +1,8 @@
+dirs:
+	mkdir content
+	mkdir content/pdf
+	mkdir content/img
+
 env:
 	go mod download -x
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative pkg/proto/game/actions.proto && \
