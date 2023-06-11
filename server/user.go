@@ -8,7 +8,6 @@ import (
 )
 
 // TODO тут добавить возврат пользователя и затем сохранение его в обычный User
-// TODO добавить создание stats при создании юзера.
 
 func (s *Server) AuthorizeOrRegisterUser(ID string, pass string) error {
 	user, err := s.DBManager.GetUser(ID)

@@ -28,3 +28,40 @@ make bot  # создает бота, который будет выбирать 
 Выбор действий за пользователя происходит через консоль.
 Будет предложено N действий, нужно в консоли прописать соответствующее действие.
 Если говорят, что "2) end day", то необходимо прописать 2.
+
+Теперь про REST сервис. Запускается все это дело на порту 8090. 
+Как запускается
+```
+cd docker
+docker compose build
+docker compose up infroserver
+```
+
+Основные методы:
+```
+# изменить профиль пользователя
+# доступные параметры: name, id, img (название картинки в папке content/img), email, sex
+curl http://localhost:8090/user --header "Content-Type: application/json" --request "PUT" -d '{"id": "albert", "name": "bebrik", "image": "img.png"}'
+
+# добавить пользователя
+# доступные параметры: name, id, img (название картинки в папке content/img), email, sex
+curl http://localhost:8090/user --header "Content-Type: application/json" --request "POST" -d '{"id": "albert", "name": "bebrik", "image": "img.png"}'
+
+# Получить пользователя
+# доступные параметры: id
+curl http://localhost:8090/user --header "Content-Type: application/json" --request "GET" -d '{"id": "albert"}'
+
+# Удалить пользователя
+# доступные параметры: id
+curl http://localhost:8090/user --header "Content-Type: application/json" --request "DELETE" -d '{"id": "albert"}'
+
+# Получить всех пользователей
+curl http://localhost:8090/users --header "Content-Type: application/json" --request "GET"'
+
+# Сгенерировать pdf по пользователю
+# доступные параметры: id
+curl http://localhost:8090/genUserPdf --header "Content-Type: application/json" --request "GET" -d '{"id": "albert"}'
+
+# Сгенерировать pdf по всем пользователям
+curl http://localhost:8090/genPdf --header "Content-Type: application/json" --request "GET"'
+```

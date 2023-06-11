@@ -21,3 +21,13 @@ services:
       - ..:/server:rw
     ports:
       - "9000:9000"
+  infoserver:
+    container_name: infoserver
+    restart: always
+    ports:
+      - "8090:8090"
+    volumes:
+      - ..:/infoserver:rw
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.infoserver

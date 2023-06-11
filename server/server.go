@@ -124,20 +124,13 @@ func (s *Server) Connect(
 	req *connection.UserJoinRequest,
 	stream connection.MafiaServer_ConnectServer,
 ) error {
-	// TODO добавить генерацию прото файлов в докер
-	// TODO поменять тут на проверку в базе данных
-	//err := s.AuthorizeOrRegisterUser(req.GetUserId(), req.GetPassword())
-	//if err != nil {
-	//	return fmt.Errorf("failed to authorize user: %v", err)
-	//}
+	if err := s.AuthorizeOrRegisterUser(req.GetUserId(), req.GetPassword()); err != nil {
+		return fmt.Errorf("failed to authorize user: %v", err)
+	}
 
 	curGame, err := s.GetOrCreateGame()
 	if err != nil {
 		return fmt.Errorf("failed to get or create new game: %v", err)
-	}
-
-	if _, ok := curGame.users[req.GetUserId()]; ok {
-		return fmt.Errorf("name exists")
 	}
 
 	err = curGame.QueueCtl.AddProducer(fmt.Sprintf("client.%d.%s", curGame.gameID, req.GetUserId()))
@@ -204,7 +197,6 @@ func (s *Server) StartListen() error {
 
 	srv := grpc.NewServer()
 	s.GrpcSrv = srv
-	// TODO закрыть сервер через defer
 	connection.RegisterMafiaServerServer(srv, s)
 	log.Println("server started!")
 	err = srv.Serve(conn)

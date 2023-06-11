@@ -42,7 +42,7 @@ func (c *Controller) ProcessNight(client connection.MafiaServerClient) {
 			if rsp.Result == pgame.CommitResponse_FAIL {
 				return
 			}
-			c.Role.SetInfo(selected)
+			c.Role.SetInfo(target)
 			if err != nil {
 				fmt.Printf("failed to commit: %v", err)
 			}

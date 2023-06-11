@@ -6,6 +6,7 @@ import (
 	"log"
 	"mafia/internal/queue"
 	"sync"
+	"time"
 
 	"mafia/pkg/proto/game"
 	"mafia/server/status"
@@ -24,9 +25,9 @@ type Game struct {
 	mu     sync.Mutex
 	status status.Status
 
-	QueueCtl *queue.Controller
-
-	gameID uint32
+	QueueCtl  *queue.Controller
+	gameID    uint32
+	startTime time.Time
 }
 
 func (s *Server) GetOrCreateGame() (*Game, error) {

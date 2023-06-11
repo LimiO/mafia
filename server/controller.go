@@ -23,6 +23,8 @@ func (s *Server) Start() error {
 }
 
 func (g *Game) StartGame() error {
+	g.startTime = time.Now()
+
 	var users []string
 	for user := range g.users {
 		users = append(users, user)
@@ -79,7 +81,31 @@ func (s *Server) PollGame() error {
 	}
 }
 
-func (s *Server) StopGame(g *Game) {
+func (s *Server) UpdateStats(g *Game) error {
+	now := time.Since(g.startTime)
+	for userID, user := range g.users {
+		stats, err := s.DBManager.GetStats(userID)
+		if err != nil {
+			return fmt.Errorf("failed to get stats: %v", err)
+		}
+		stats.CountGames++
+
+		isMafia := user.role == game.Role_MAFIA
+		if isMafia && g.EndGameStatus() == STATUS_MAFIA {
+			stats.CountWins++
+		} else if !isMafia && g.EndGameStatus() == STATUS_HUMAN {
+			stats.CountWins++
+		}
+		stats.TotalTime += int(now.Seconds())
+
+		if err = s.DBManager.UpdateStats(stats); err != nil {
+			return fmt.Errorf("failed to update stats: %v", err)
+		}
+	}
+	return nil
+}
+
+func (s *Server) StopGame(g *Game) error {
 	delete(s.Games, g.gameID)
 	var msg string
 	switch g.EndGameStatus() {
@@ -88,9 +114,13 @@ func (s *Server) StopGame(g *Game) {
 	case STATUS_HUMAN:
 		msg = "People won!"
 	}
+
+	// TODO добавить статус, что юзер уже такой есть
+	err := s.UpdateStats(g)
+	if err != nil {
+		return fmt.Errorf("failed to update stats: %v", err)
+	}
 	g.SendToChat("game", msg)
 	g.SendState(game.State_END)
-	for userID := range g.users {
-		fmt.Println(userID)
-	}
+	return nil
 }

@@ -72,8 +72,11 @@ func (m *Manager) CreateStats(stats *Stats) error {
 
 func (m *Manager) UpdateStats(stats *Stats) error {
 	_, err := m.DB.Exec(
-		"UPDATE stats SET VALUES (stats.id, stats.count_games, stats.count_wins, stats.time) = (?, ?, ?, ?) WHERE stats.id=?",
-		stats.ID, stats.CountGames, stats.CountWins, stats.TotalTime,
+		`UPDATE stats SET count_games = ?,
+								count_wins = ?,
+								time = ?
+             WHERE id = ?;`,
+		stats.CountGames, stats.CountWins, stats.TotalTime, stats.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update stats: %v", err)
@@ -82,7 +85,7 @@ func (m *Manager) UpdateStats(stats *Stats) error {
 }
 
 func (m *Manager) DeleteStats(stats *Stats) error {
-	_, err := m.DB.Exec("DELETE FROM stats WHERE stats.id=?", stats.ID)
+	_, err := m.DB.Exec("DELETE FROM stats WHERE id = ?", stats.ID)
 	if err != nil {
 		return fmt.Errorf("failed to delete stats: %v", err)
 	}
