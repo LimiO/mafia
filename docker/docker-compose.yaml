@@ -17,6 +17,8 @@ services:
       dockerfile: docker/Dockerfile.server
     depends_on:
       - rabbitmq
+    volumes:
+      - "../mafia.db:/server/mafia.db:rw"
     ports:
       - "9000:9000"
   infoserver:
@@ -24,6 +26,8 @@ services:
     restart: always
     ports:
       - "8090:8090"
+    volumes:
+      - "../mafia.db:/infoserver/mafia.db:rw"
     build:
       context: ../
       dockerfile: docker/Dockerfile.infoserver

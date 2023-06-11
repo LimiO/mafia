@@ -81,9 +81,9 @@ func mergeUserData(stats []*db.Stats, users []*db.User) map[string]*UserData {
 	for _, stat := range stats {
 		result[stat.ID].stats = stat
 	}
-	for _, user := range users {
-		if result[user.ID].stats == nil {
-			delete(result, user.ID)
+	for userID := range result {
+		if result[userID].stats == nil {
+			delete(result, userID)
 		}
 	}
 
