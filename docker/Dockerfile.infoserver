@@ -2,6 +2,8 @@ FROM golang:1.20
 
 COPY go.mod /infoserver/go.mod
 COPY go.sum /infoserver/go.sum
+COPY . /infoserver/.
+
 WORKDIR /infoserver
 
 ENV PATH="$PATH:$GOROOT/bin"
@@ -9,11 +11,24 @@ ENV PATH="$PATH:$GOROOT/bin"
 RUN apt-get update
 RUN apt-get upgrade -y
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential xorg libssl-dev libxrender-dev wget gdebi
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential xorg libssl-dev libxrender-dev wget gdebi \
+    protobuf-compiler golang-goprotobuf-dev
 RUN wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_arm64.deb
 RUN gdebi --n wkhtmltox_0.12.6.1-2.bullseye_arm64.deb
 ENV WKHTMLTOPDF_PATH=/infoserver
 ENV PATH="$PATH:/infoserver"
+
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative pkg/proto/game/actions.proto
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative pkg/proto/game/roles.proto
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative pkg/proto/game/state.proto
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative pkg/proto/connection/connection.proto
 
 RUN go mod download -x
 
