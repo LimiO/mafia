@@ -46,15 +46,15 @@ func (m *Manager) GetUser(ID string, filters ...Filter) (*User, error) {
 	if row == nil {
 		return nil, fmt.Errorf("failed to get user")
 	}
-	user := User{}
+	user := &User{}
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Image, &user.Sex, &user.PassHash)
 	if err != nil {
-		return nil, nil
+		return nil, fmt.Errorf("failed to get user: %v", err)
 	}
 	for _, filter := range filters {
-		filter(&user)
+		filter(user)
 	}
-	return &user, nil
+	return user, nil
 }
 
 func (m *Manager) SelectUsers(filters ...Filter) ([]*User, error) {
@@ -66,15 +66,15 @@ func (m *Manager) SelectUsers(filters ...Filter) ([]*User, error) {
 
 	var users []*User
 	for rows.Next() {
-		user := User{}
+		user := &User{}
 		err = rows.Scan(&user.ID, &user.Name, &user.Email, &user.Image, &user.Sex, &user.PassHash)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan rows: %v", err)
 		}
 		for _, filter := range filters {
-			filter(&user)
+			filter(user)
 		}
-		users = append(users, &user)
+		users = append(users, user)
 	}
 	return users, nil
 }

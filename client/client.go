@@ -39,8 +39,6 @@ func (c *Client) ProcessStreamResponse(rsp *connection.ServerResponse) error {
 	switch rsp.Response.(type) {
 	case *connection.ServerResponse_Join:
 		return c.ProcessJoinResponse(rsp.GetJoin())
-	case *connection.ServerResponse_Chat:
-		return c.ProcessChatResponse(rsp.GetChat())
 	case *connection.ServerResponse_State:
 		return c.ProcessStateResponse(rsp.GetState())
 	case *connection.ServerResponse_Start:

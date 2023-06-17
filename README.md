@@ -7,7 +7,6 @@ cd docker
 docker-compose build
 docker-compose up rabbitmq
 ```
-Возможно понадобится поменять arm на amd в двух местах в dockefile.infoserver, зависит от архитектуры.
 
 Запуск сервера происходит через
 ```
@@ -66,3 +65,5 @@ curl http://localhost:8090/genUserPdf --header "Content-Type: application/json" 
 # Сгенерировать pdf по всем пользователям
 curl http://localhost:8090/genPdf --header "Content-Type: application/json" --request "GET"
 ```
+
+Для pdf с картинкой сразу подложил картинку внутрь content/img
