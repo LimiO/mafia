@@ -49,7 +49,7 @@ func (m *Manager) GetUser(ID string, filters ...Filter) (*User, error) {
 	user := &User{}
 	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Image, &user.Sex, &user.PassHash)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get user: %v", err)
+		return nil, nil
 	}
 	for _, filter := range filters {
 		filter(user)

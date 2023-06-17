@@ -25,7 +25,7 @@ func (c *Controller) getUser(ctx *gin.Context) {
 	}
 
 	user, err := c.dbcontroller.GetUser(req.ID, passFilter)
-	if err != nil {
+	if err != nil || user == nil {
 		ctx.IndentedJSON(http.StatusBadRequest, "failed to get user")
 		return
 	}
